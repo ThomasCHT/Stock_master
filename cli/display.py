@@ -1,6 +1,7 @@
 from typing import Iterable, Optional
 
 from models.holding import Holding
+from models.realized_pnl import RealizedPnL
 
 
 def _format_note(note: Optional[str]) -> str:
@@ -58,6 +59,30 @@ def print_holdings(holdings: list[Holding]) -> None:
     for holding in holdings:
         status = "異常（超賣）" if holding.quantity < 0 else ""
         table_rows.append((holding.symbol, str(holding.quantity), status))
+
+    widths = [
+        max(len(headers[i]), *(len(r[i]) for r in table_rows))
+        for i in range(len(headers))
+    ]
+
+    def format_row(cells):
+        return "  ".join(cell.ljust(widths[i]) for i, cell in enumerate(cells))
+
+    print()
+    print(format_row(headers))
+    print(format_row(["-" * w for w in widths]))
+    for row in table_rows:
+        print(format_row(row))
+    print()
+
+
+def print_realized_pnl(items: list[RealizedPnL]) -> None:
+    if not items:
+        print("\n目前沒有已實現損益。\n")
+        return
+
+    headers = ("代號", "已實現損益")
+    table_rows = [(item.symbol, f"{item.realized_pnl:.2f}") for item in items]
 
     widths = [
         max(len(headers[i]), *(len(r[i]) for r in table_rows))

@@ -1,5 +1,5 @@
 from db.connection import get_connection, init_db
-from cli.display import print_holdings, print_trades
+from cli.display import print_holdings, print_realized_pnl, print_trades
 from cli.prompts import (
     prompt_float,
     prompt_int,
@@ -8,6 +8,7 @@ from cli.prompts import (
     prompt_trade_date,
 )
 from services.holdings_service import get_holdings
+from services.pnl_service import get_realized_pnl_by_symbol
 from services.trade_service import record_buy, record_sell
 
 
@@ -68,6 +69,10 @@ def _handle_list_holdings() -> None:
     print_holdings(get_holdings())
 
 
+def _handle_realized_pnl() -> None:
+    print_realized_pnl(get_realized_pnl_by_symbol())
+
+
 def run() -> None:
     init_db()
 
@@ -76,6 +81,7 @@ def run() -> None:
         "2": ("新增賣出", _handle_sell),
         "3": ("查看所有交易紀錄", _handle_list_trades),
         "4": ("查看目前持股", _handle_list_holdings),
+        "5": ("查看 Realized PnL", _handle_realized_pnl),
     }
 
     while True:
