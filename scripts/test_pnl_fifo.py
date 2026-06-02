@@ -23,6 +23,13 @@ def main() -> None:
         db_connection.DB_PATH = temp_db_path
 
         try:
+            print("=== FIFO Realized PnL Test (Temporary DB) ===")
+            print("測試交易：")
+            print("- 買 100 股 @ 10")
+            print("- 買 100 股 @ 12")
+            print("- 賣 150 股 @ 15")
+            print()
+
             # FIFO check: (100@10 + 100@12), sell 150@15 => 650
             record_buy("TST1", 100, 10.0, "2026-06-01")
             record_buy("TST1", 100, 12.0, "2026-06-02")
@@ -31,6 +38,17 @@ def main() -> None:
             results = {item.symbol: item.realized_pnl for item in get_realized_pnl_by_symbol()}
             expected = 650.0
             actual = results.get("TST1")
+
+            print("FIFO 計算過程：")
+            part1 = (15.0 - 10.0) * 100
+            part2 = (15.0 - 12.0) * 50
+            total = part1 + part2
+            print(f"- 前 100 股成本 10，損益 = (15 - 10) * 100 = {part1:.0f}")
+            print(f"- 後 50 股成本 12，損益 = (15 - 12) * 50 = {part2:.0f}")
+            print(f"- 總已實現損益 = {total:.0f}")
+            print()
+            print(f"服務計算結果（TST1）= {actual:.0f}" if actual is not None else "服務計算結果（TST1）= N/A")
+
             if actual is None:
                 raise AssertionError("TST1 result not found")
             if abs(actual - expected) > 1e-9:
