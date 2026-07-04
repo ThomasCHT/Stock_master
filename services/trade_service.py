@@ -66,6 +66,25 @@ def _insert_trade(
     return Trade.from_row(row)
 
 
+def _get_current_quantity(symbol: str) -> int:
+    init_db()
+
+    with get_connection() as conn:
+        row = conn.execute(
+            """
+            SELECT COALESCE(
+                SUM(CASE WHEN side = 'buy' THEN quantity ELSE -quantity END),
+                0
+            ) AS quantity
+            FROM trades
+            WHERE symbol = ?
+            """,
+            (symbol,),
+        ).fetchone()
+
+    return int(row["quantity"])
+
+
 def record_buy(
     symbol: str,
     quantity: int,
@@ -95,6 +114,14 @@ def record_sell(
     normalized_symbol = _validate_trade_inputs(
         symbol, quantity, price, trade_date, fee, tax
     )
+
+    current_quantity = _get_current_quantity(normalized_symbol)
+    if quantity > current_quantity:
+        raise ValueError(
+            f"not enough holdings for {normalized_symbol}: "
+            f"available {current_quantity}, requested {quantity}"
+        )
+
     return _insert_trade(
         normalized_symbol, "sell", quantity, price, trade_date, fee, tax, note
     )
